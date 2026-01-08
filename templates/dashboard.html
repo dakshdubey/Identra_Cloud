@@ -1,0 +1,539 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 1.5rem;">
+
+    <!-- Top Bar: Greeting & Stats -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem; gap: 2rem;">
+        <div style="flex: 1;">
+            <h2 class="text-gradient" style="font-size: 2rem;">Cloud Drive</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Biometric User: <span
+                    style="color: white; font-weight: 600;">{{ session.get('user_id') }}</span></p>
+
+            <!-- Smart Search -->
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="position: relative; max-width: 500px; flex-grow: 1;">
+                    <i class="fa-solid fa-search"
+                        style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="text" id="search-input" placeholder="Search files, types, or dates..."
+                        onkeyup="filterFiles()"
+                        style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; padding: 1rem 1rem 1rem 3rem; border-radius: var(--radius-full); font-size: 0.95rem; outline: none; transition: 0.3s; backdrop-filter: blur(10px);">
+                </div>
+                <!-- Activity Log Button -->
+                <button onclick="openActivityLog()" class="btn btn-glass" title="Audit Log"
+                    style="padding: 0.8rem; border-radius: 50%; flex-shrink: 0;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-secondary);"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Storage Widget -->
+        <div class="glass-card" style="padding: 1rem 1.5rem; width: 300px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                <span style="color: var(--text-muted);">Storage Used</span>
+                <span style="color: var(--accent-primary);">{{ stats.total_size_str }} / 100 GB</span>
+            </div>
+            <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                <div
+                    style="width: {{ stats.total_size_percentage }}%; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access / Folders -->
+    <h3
+        style="margin-bottom: 1rem; color: var(--text-muted); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+        Categories</h3>
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+
+        <!-- Private Folder -->
+        <div onclick="filterByCategory('secrets')" class="glass-card zoom-hover"
+            style="display: flex; align-items: center; gap: 1rem; cursor: pointer; border-color: rgba(239, 68, 68, 0.3);">
+            <div
+                style="width: 48px; height: 48px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-user-secret" style="color: var(--accent-error); font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1rem;">Secrets</h4>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">{{ stats.secrets }} files • Encrypted</p>
+            </div>
+        </div>
+
+        <!-- Photos -->
+        <div onclick="filterByCategory('image')" class="glass-card zoom-hover"
+            style="display: flex; align-items: center; gap: 1rem; cursor: pointer;">
+            <div
+                style="width: 48px; height: 48px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-images" style="color: var(--accent-primary); font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1rem;">Photos</h4>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">{{ stats.images }} files</p>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div onclick="filterByCategory('document')" class="glass-card zoom-hover"
+            style="display: flex; align-items: center; gap: 1rem; cursor: pointer;">
+            <div
+                style="width: 48px; height: 48px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-file-contract" style="color: var(--accent-success); font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1rem;">Documents</h4>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">{{ stats.documents }} files</p>
+            </div>
+        </div>
+
+        <!-- Videos -->
+        <div onclick="filterByCategory('video')" class="glass-card zoom-hover"
+            style="display: flex; align-items: center; gap: 1rem; cursor: pointer;">
+            <div
+                style="width: 48px; height: 48px; background: rgba(139, 92, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-clapperboard" style="color: var(--accent-secondary); font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1rem;">Videos</h4>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">{{ stats.videos }} files</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Files - Grid View -->
+    <div class="glass-card" style="padding: 1.5rem; min-height: 400px; display: flex; flex-direction: column;">
+        <div
+            style="margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.125rem;">All Files</h3>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 1rem;">
+                <input type="file" id="file-input" style="display: none;" onchange="handleFileUpload(this)">
+                <button onclick="document.getElementById('file-input').click()" class="btn btn-primary"
+                    style="padding: 0.5rem 1.25rem; font-size: 0.875rem;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                </button>
+            </div>
+        </div>
+
+        <!-- Gallery Grid (Masonry) -->
+        <div id="files-grid" style="column-width: 200px; column-gap: 1.5rem;">
+            {% if files|length == 0 %}
+            <div
+                style="text-align: center; padding: 4rem; color: var(--text-muted); border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No files yet. Drag & drop here!</p>
+            </div>
+            {% else %}
+            {% for file in files %}
+            <div class="file-card zoom-hover" data-name="{{ file.name }}" data-type="{{ file.icon }}"
+                style="background: rgba(255,255,255,0.03); border-radius: 16px; overflow: hidden; position: relative; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem; break-inside: avoid; display: inline-block; width: 100%;">
+
+                <!-- Thumbnail / Icon Area -->
+                <div onclick="previewFile('{{ file.name }}', '{{ file.url }}')"
+                    style="background: rgba(0,0,0,0.2); cursor: pointer; overflow: hidden; position: relative;">
+
+                    <!-- If Image, show thumbnail (natural aspect ratio) -->
+                    {% if 'image' in file.icon %}
+                    <img src="{{ file.url }}" alt="{{ file.name }}"
+                        style="width: 100%; height: auto; display: block; transition: 0.5s;">
+                    {% else %}
+                    <!-- Else show large icon with fixed padding -->
+                    <div style="padding: 3rem 0; display: flex; align-items: center; justify-content: center;">
+                        <i class="{{ file.icon }}"
+                            style="font-size: 4rem; color: {{ file.color }}; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));"></i>
+                    </div>
+                    {% endif %}
+
+                    <!-- Hover Overlay -->
+                    <div class="card-overlay"
+                        style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; transition: 0.3s; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-eye" style="color: white; font-size: 1.5rem;"></i>
+                    </div>
+                </div>
+
+                <!-- Footer Info -->
+                <div style="padding: 1rem; background: rgba(255,255,255,0.02); backdrop-filter: blur(10px);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                        <span
+                            style="font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"
+                            title="{{ file.name }}">{{ file.name }}</span>
+                    </div>
+                    <div
+                        style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ file.size }}</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ file.url }}" download title="Download" class="action-btn"><i
+                                    class="fa-solid fa-download"></i></a>
+                            <button onclick="openShareModal('{{ file.name }}', '{{ file.url }}')" title="Share"
+                                class="action-btn" style="color: var(--accent-primary) !important;"><i
+                                    class="fa-solid fa-share-nodes"></i></button>
+                            <button onclick="deleteFile('{{ file.name }}')" title="Delete" class="action-btn"
+                                style="color: var(--accent-error) !important;"><i
+                                    class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .file-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .file-card:hover .card-overlay {
+        opacity: 1 !important;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: color 0.2s, transform 0.2s;
+        font-size: 0.9rem;
+        padding: 0;
+    }
+
+    .action-btn:hover {
+        color: white;
+        transform: scale(1.1);
+    }
+</style>
+
+<!-- Preview Modal -->
+<div id="preview-modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;">
+    <div class="glass-card"
+        style="width: 90%; max-width: 800px; height: 80vh; padding: 0; overflow: hidden; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s;">
+        <!-- Header -->
+        <div
+            style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+            <h3 id="preview-title"
+                style="font-size: 1.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">
+                File Preview</h3>
+            <button onclick="closePreview()"
+                style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.25rem;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <!-- Content -->
+        <div id="preview-content"
+            style="flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); overflow: auto; padding: 1rem;">
+            <!-- Dynamic Content Injected Here -->
+        </div>
+        <!-- Footer -->
+        <div
+            style="padding: 1rem 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: flex-end; gap: 1rem; background: rgba(0,0,0,0.3);">
+            <a id="preview-download-btn" href="#" download class="btn btn-primary">
+                <i class="fa-solid fa-download"></i> Download Original
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Drag & Drop Overlay -->
+<div id="drag-overlay"
+    style="display: none; position: fixed; inset: 0; background: rgba(59, 130, 246, 0.2); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; border: 4px dashed var(--accent-primary);">
+    <div class="glass-card" style="padding: 3rem; text-align: center; pointer-events: none;">
+        <i class="fa-solid fa-cloud-arrow-up"
+            style="font-size: 4rem; color: var(--accent-primary); margin-bottom: 1.5rem;"></i>
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Drop files to upload</h2>
+        <p style="color: var(--text-muted);">Instantly store in your secure biometric cloud</p>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-card" style="width: 400px; padding: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+        <h3 style="font-size: 1.25rem;">Secure Share</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Share this secure link. Access requires biometric
+            authentication.</p>
+
+        <input type="text" id="share-link-input" readonly value="Generating..."
+            style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; border-radius: 8px;">
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button onclick="document.getElementById('share-modal').style.display='none'"
+                class="btn btn-glass">Close</button>
+            <button onclick="copyShareLink()" class="btn btn-primary"><i class="fa-solid fa-copy"></i> Copy
+                Link</button>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Log Modal -->
+<div id="activity-modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-card" style="width: 600px; max-height: 80vh; display: flex; flex-direction: column; padding: 0;">
+        <div
+            style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.25rem;">Security Audit Log</h3>
+            <button onclick="document.getElementById('activity-modal').style.display='none'"
+                style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i
+                    class="fa-solid fa-xmark fa-lg"></i></button>
+        </div>
+        <div id="activity-list" style="padding: 1.5rem; overflow-y: auto; flex: 1;">
+            Loading activity...
+        </div>
+    </div>
+</div>
+
+<script>
+    // -- ACTIVITY LOG --
+    async function openActivityLog() {
+        document.getElementById('activity-modal').style.display = 'flex';
+        const list = document.getElementById('activity-list');
+        list.innerHTML = '<div style="text-align:center; color:var(--text-muted);">Loading secure events...</div>';
+
+        try {
+            const res = await fetch('/api/activity');
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                if (data.logs.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No activity recorded yet.</p>';
+                } else {
+                    let html = '<ul style="list-style: none; padding: 0;">';
+                    data.logs.forEach(log => {
+                        let icon = 'fa-circle-info';
+                        let color = 'var(--text-muted)';
+                        if (log.action === 'LOGIN') { icon = 'fa-fingerprint'; color = 'var(--accent-success)'; }
+                        if (log.action === 'UPLOAD') { icon = 'fa-cloud-upload'; color = 'var(--accent-primary)'; }
+
+                        html += `
+                        <li style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 1rem; align-items: center;">
+                            <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid ${icon}" style="color: ${color};"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500;">${log.action}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">${log.details}</div>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.7;">${log.date}</div>
+                        </li>`;
+                    });
+                    html += '</ul>';
+                    list.innerHTML = html;
+                }
+            }
+        } catch (e) {
+            list.innerHTML = '<p style="color:red">Error loading logs.</p>';
+        }
+    }
+
+    // -- SECURE SHARING --
+    function openShareModal(filename, url) {
+        document.getElementById('share-modal').style.display = 'flex';
+        // In a real app, generate a unique token. Here we use the direct link.
+        const absoluteUrl = window.location.origin + url;
+        document.getElementById('share-link-input').value = absoluteUrl;
+    }
+
+    function copyShareLink() {
+        const input = document.getElementById('share-link-input');
+        input.select();
+        document.execCommand('copy'); // Fallback
+        navigator.clipboard.writeText(input.value);
+
+        const btn = document.querySelector('#share-modal .btn-primary');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+    }
+    let dragCounter = 0;
+
+    window.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        if (dragOverlay.style.display !== 'flex') {
+            dragOverlay.style.display = 'flex';
+        }
+    });
+
+    window.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter === 0) {
+            dragOverlay.style.display = 'none';
+        }
+    });
+
+    window.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+
+    window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dragOverlay.style.display = 'none';
+
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            // Use existing upload logic
+            const fileInput = document.getElementById('file-input');
+            fileInput.files = e.dataTransfer.files; // Assign to input
+            handleFileUpload(fileInput);
+        }
+    });
+
+    // -- UPLOAD HANDLER --
+    async function handleFileUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const btn = document.querySelector('button[onclick*="file-input"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert('Upload failed: ' + data.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Upload error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    }
+
+    // -- SEARCH & FILTER --
+    function filterFiles() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const rows = document.querySelectorAll('.file-card'); // Grid Items
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name').toLowerCase();
+            row.style.display = name.includes(query) ? 'inline-block' : 'none'; // Masonry Item
+        });
+    }
+
+    function filterByCategory(type) {
+        const rows = document.querySelectorAll('.file-card');
+
+        let iconMatch = '';
+        if (type === 'image') iconMatch = 'fa-image';
+        if (type === 'video') iconMatch = 'fa-clapperboard';
+        if (type === 'document') iconMatch = 'fa-file';
+        if (type === 'secrets') iconMatch = 'fa-user-secret';
+
+        rows.forEach(row => {
+            const iconClass = row.getAttribute('data-type');
+            if (iconClass.includes(iconMatch)) {
+                row.style.display = 'inline-block';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // -- PREVIEW MODAL --
+    function previewFile(name, url) {
+        const modal = document.getElementById('preview-modal');
+        const title = document.getElementById('preview-title');
+        const content = document.getElementById('preview-content');
+        const downloadBtn = document.getElementById('preview-download-btn');
+
+        title.textContent = name;
+        downloadBtn.href = url;
+        content.innerHTML = ''; // Clear prev
+
+        const ext = name.split('.').pop().toLowerCase();
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(ext)) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.style.borderRadius = '8px';
+            content.appendChild(img);
+        } else if (['mp4', 'webm', 'mov'].includes(ext)) {
+            const video = document.createElement('video');
+            video.src = url;
+            video.controls = true;
+            video.style.maxWidth = '100%';
+            video.style.maxHeight = '100%';
+            content.appendChild(video);
+        } else if (ext === 'pdf') {
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            content.appendChild(iframe);
+        } else {
+            content.innerHTML = '<div style="text-align:center; color: var(--text-muted);"><i class="fa-solid fa-file-circle-question" style="font-size: 4rem; margin-bottom: 1rem;"></i><p>Preview not available for this file type.</p></div>';
+        }
+
+        modal.style.display = 'flex';
+        // Trigger reflow
+        modal.offsetHeight;
+        modal.style.opacity = '1';
+        modal.querySelector('.glass-card').style.transform = 'scale(1)';
+    }
+
+    function closePreview() {
+        const modal = document.getElementById('preview-modal');
+        modal.style.opacity = '0';
+        modal.querySelector('.glass-card').style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    // Close on click outside
+    document.getElementById('preview-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'preview-modal') closePreview();
+    });
+
+    // -- DELETE FILE --
+    async function deleteFile(filename) {
+        if (!confirm(`Are you sure you want to delete "${filename}"? This cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/delete/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                // Remove from UI immediately for responsiveness
+                const cards = document.querySelectorAll('.file-card');
+                cards.forEach(card => {
+                    if (card.getAttribute('data-name') === filename) {
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => card.remove(), 300);
+                    }
+                });
+                // Also reload to update stats (optional, but good for accuracy)
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (e) {
+            alert('Delete failed');
+        }
+    }
+
+</script>
+{% endblock %}

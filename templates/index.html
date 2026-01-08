@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container" style="min-height: 80vh; display: flex; align-items: center; padding: 4rem 1.5rem;">
+    <div class="grid-2" style="align-items: center; width: 100%;">
+
+        <!-- Left: Hero Text -->
+        <div>
+            <div
+                style="display: inline-block; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 20px; color: var(--accent-primary); font-weight: 600; font-size: 0.875rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-cloud" style="margin-right: 0.5rem;"></i> Biometric Cloud Storage
+            </div>
+            <h1 class="text-gradient" style="font-size: 4rem; margin-bottom: 1.5rem;">
+                Store it in the <br>
+                <span class="text-accent-gradient">Bio-Cloud.</span>
+            </h1>
+            <p
+                style="color: var(--text-muted); font-size: 1.25rem; line-height: 1.6; margin-bottom: 2.5rem; max-width: 90%;">
+                The world's first cloud storage encrypted by your DNA algorithm. Access your photos, documents, and
+                secrets with just a glance.
+            </p>
+
+            <div style="display: flex; gap: 1rem;">
+                <a href="#auth-card" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Go to Cloud
+                </a>
+                <a href="#" class="btn btn-glass btn-lg">
+                    <i class="fa-solid fa-shield-cat"></i> Learn More
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: Auth Window -->
+        <div id="auth-card" class="glass-card animate-float"
+            style="padding: 0; overflow: hidden; max-width: 480px; margin: 0 auto;">
+            <!-- Header -->
+            <div
+                style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-bottom: 1px solid var(--glass-border); text-align: center;">
+                <h3 style="margin-bottom: 0.25rem;">Secure Terminal</h3>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">Biometric Sensor Ready</p>
+            </div>
+
+            <!-- Body -->
+            <div style="padding: 2.5rem 2rem;">
+
+                <!-- Status Display -->
+                <div id="status-display" style="text-align: center; margin-bottom: 2rem;">
+                    <div
+                        style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <!-- Pulse Ring -->
+                        <div id="pulse-ring"
+                            style="position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent-primary); opacity: 0; transition: 0.3s;">
+                        </div>
+                        <i id="status-icon" class="fa-solid fa-fingerprint"
+                            style="font-size: 2.5rem; color: var(--text-muted); transition: 0.3s;"></i>
+                    </div>
+                    <h4 id="status-text" style="font-size: 1.25rem; margin-bottom: 0.5rem;">Waiting for Input</h4>
+                    <p id="status-subtext" style="color: var(--text-muted); font-size: 0.875rem;">Select an action to
+                        proceed</p>
+                </div>
+
+                <!-- Input for Enrollment (Hidden by default) -->
+                <div id="enroll-input-group" style="margin-bottom: 1.5rem; display: none;">
+                    <label
+                        style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-muted);">Enter
+                        User ID</label>
+                    <div style="position: relative;">
+                        <i class="fa-solid fa-user"
+                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                        <input type="text" id="user-id-input" placeholder="e.g. agent_007"
+                            style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: white; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: var(--radius-sm); font-family: var(--font-main); outline: none; transition: 0.3s;">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <button onclick="switchMode('verify')" id="btn-verify" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-unlock-keyhole"></i> Login
+                    </button>
+                    <button onclick="switchMode('register')" id="btn-register" class="btn btn-glass"
+                        style="width: 100%;">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <!-- Action Trigger (Hidden initially) -->
+                <button id="btn-action" onclick="executeAction()" class="btn btn-primary"
+                    style="width: 100%; margin-top: 1rem; display: none;">
+                    Start Scanning
+                </button>
+
+            </div>
+
+            <!-- Footer -->
+            <div
+                style="background: rgba(0,0,0,0.2); padding: 1rem; text-align: center; border-top: 1px solid var(--glass-border);">
+                <p style="font-size: 0.75rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-lock" style="color: var(--accent-success); margin-right: 0.25rem;"></i>
+                    Connection Encrypted (AES-256)
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

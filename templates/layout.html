@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identra | Secure Access Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="glass-card" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0; padding: 1rem 0;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="/" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <div
+                    style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-fingerprint" style="color: white;"></i>
+                </div>
+                <span class="text-gradient"
+                    style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">Identra Cloud</span>
+            </a>
+
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                {% if session.get('user_id') %}
+                <span style="color: var(--text-muted); font-size: 0.9rem;">ID: {{ session.get('user_id') }}</span>
+                <a href="/logout" class="btn btn-glass" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</a>
+                {% else %}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="status-indicator active"></span>
+                    <span style="color: var(--text-muted); font-size: 0.875rem;">System Secure</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main style="flex: 1;">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="padding: 2rem 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">
+        <div class="container">
+            <p>&copy; 2026 Identra Security Systems. Powered by <span
+                    style="color: var(--accent-primary);">evoBioMat</span>.</p>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>
