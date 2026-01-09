@@ -94,4 +94,4 @@ Visit **http://localhost:5000** in your browser.
 Powered by **EvoBioMat**.
 
 ---
-*Built with ❤️ by the Identra Team.*
+*Built with ❤️ by the Daksha Dubey.*
